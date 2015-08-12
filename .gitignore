@@ -16,7 +16,6 @@
 # ---------------
 doc/
 instructions/
-PA1_template_files
 .Rhistory
 .RData
 *.rds
