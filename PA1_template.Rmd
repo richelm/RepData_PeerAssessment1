@@ -95,4 +95,5 @@ total_na <- length(activity[which(is.na(activity$steps)),]$steps)
 
 1. Total number of missing values is $`r total_na`$
 1. 
+
 ## Are there differences in activity patterns between weekdays and weekends?
