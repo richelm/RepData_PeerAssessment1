@@ -8,24 +8,6 @@ Make some initial environmental settings for the script. This makes sure we have
 
 
 ```r
-# load the dplyr library
-library(dplyr)
-```
-
-```
-## 
-## Attaching package: 'dplyr'
-## 
-## The following object is masked from 'package:stats':
-## 
-##     filter
-## 
-## The following objects are masked from 'package:base':
-## 
-##     intersect, setdiff, setequal, union
-```
-
-```r
 # set working_dir variable
 working_dir <- "~/Documents/courses/repdata/RepData_PeerAssessment1"
 
@@ -44,37 +26,74 @@ activity <- read.csv("activity.csv")
 
 ### Preprocess the data
 
-In order to produce histogram and calculate the mean and median, we first compute the sum of steps for each date. 
+In order to produce histogram and calculate the mean and median, we first compute the sum of steps for each day. 
 
 
 ```r
-# get totalSteps by date
-totalSteps <- aggregate(steps ~ date, activity, sum)
-meanSteps <- mean(totalSteps$steps)
-medianSteps <- median(totalSteps$steps)
+# get dailySteps by day
+dailySteps <- aggregate(steps ~ date, activity, sum)
+meanSteps <- as.integer(mean(dailySteps$steps))
+medianSteps <- as.integer(median(dailySteps$steps))
+
+# get interval steps by day
+dailyAvg <- aggregate(steps ~ interval, activity, mean)
 ```
 
 ## What is mean total number of steps taken per day?
 
-1. The historgam of the total number of step taken.
+* The historgam of the total number of step taken.
 
 
 ```r
-hist(totalSteps$steps, breaks=seq(0,25000,1000), col="BLUE")
+hist(dailySteps$steps, breaks=seq(0,25000,1000), col="BLUE")
 ```
 
 ![](PA1_template_files/figure-html/unnamed-chunk-4-1.png) 
 
-1. The **mean** and **median** of total number of steps taken per day.
-  1. Mean: 1.0766189\times 10^{4}
-  1. Median: 10765
+* The **mean** and **median** of total number of steps taken per day.
+    * Mean: 10766
+    * Median: 10765
   
 ## What is the average daily activity pattern?
 
+* Below is a time series plot of the 5-minute intervals and the average number of steps taken, averaged across all days.
+
+
+
+```r
+plot(dailyAvg$interval,
+     dailyAvg$steps,
+     type = "l",
+#     pch = 19,
+#     col = "blue",
+#     ylim = c(3.0,8.0),
+     xlab = "5 Minute Intervals",
+     ylab = "Average Steps Taken",
+#     main = "Total PM2.5 Emissions in United States\nAnnually from 1999 to 2008",
+     panel.first = grid()
+)
+axis(side=1, at = seq(0,2500,250))
+```
+
+![](PA1_template_files/figure-html/unnamed-chunk-5-1.png) 
+
+
+
+```r
+max_interval <- dailyAvg[which(dailyAvg$steps == max(dailyAvg$steps)),]$interval
+```
+
+* The interval which contains the maximum average, across all days in the dataset, is $835$
 
 
 ## Imputing missing values
 
 
+```r
+# get count of the total number NA values
+total_na <- length(activity[which(is.na(activity$steps)),]$steps)
+```
 
+1. Total number of missing values is $2304$
+1. 
 ## Are there differences in activity patterns between weekdays and weekends?
