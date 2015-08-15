@@ -64,12 +64,8 @@ hist(dailySteps$steps, breaks=seq(0,25000,1000), col="BLUE")
 plot(dailyAvg$interval,
      dailyAvg$steps,
      type = "l",
-#     pch = 19,
-#     col = "blue",
-#     ylim = c(3.0,8.0),
      xlab = "5 Minute Intervals",
      ylab = "Average Steps Taken",
-#     main = "Total PM2.5 Emissions in United States\nAnnually from 1999 to 2008",
      panel.first = grid()
 )
 axis(side=1, at = seq(0,2500,250))
@@ -92,8 +88,37 @@ max_interval <- dailyAvg[which(dailyAvg$steps == max(dailyAvg$steps)),]$interval
 ```r
 # get count of the total number NA values
 total_na <- length(activity[which(is.na(activity$steps)),]$steps)
+
+# replace missing values with corresponding mean of the interval
+missing <- which(is.na(activity$steps))
+i_mean <- aggregate(steps ~ interval, activity, mean)
+for (r in missing) {
+  activity$steps[r] <- i_mean$steps[i_mean$interval == activity$interval[r]]
+}
+
+# get dailySteps by day
+dailySteps <- aggregate(steps ~ date, activity, sum)
+meanSteps <- as.integer(mean(dailySteps$steps))
+medianSteps <- as.integer(median(dailySteps$steps))
+
+# get interval steps by day
+dailyAvg <- aggregate(steps ~ interval, activity, mean)
 ```
 
-1. Total number of missing values is $2304$
-1. 
+* The historgam of the total number of step taken.
+
+
+```r
+hist(dailySteps$steps, breaks=seq(0,25000,1000), col="BLUE")
+```
+
+![](PA1_template_files/figure-html/unnamed-chunk-8-1.png) 
+
+* Total number of missing values is $2304$
+
+* The **mean** and **median** of total number of steps taken per day.
+    * Mean: $10766$
+    * Median: $10766$
+
 ## Are there differences in activity patterns between weekdays and weekends?
+
