@@ -4,10 +4,19 @@
 
 ### Initializations
 
-Make some initial environmental settings for the script. This makes sure we have needed libraries loaded and key script variables set. Specifically, we expect the data to be in our working directory. The same directory from which our R script is running. That needs to be set.  When running this script on your computer, set the *working_dir* variable accordingly, so that you can reproduce the output. It is the only thing that needs to be changed.
+Make some initial environmental settings for the script. This makes sure we have needed libraries loaded and key script variables set. Specifically, we expect the data to be in our working directory. The same directory from which our R script is running. That needs to be set.  When running this script on your computer, set the *working_dir* variable accordingly, so that you can reproduce the output.
+
 
 
 ```r
+# NOTE: 
+# message=FALSE was used to suppress the library loading messages. These
+# are not useful for our analysis output.
+
+# libraries
+library(dplyr)
+library(lubridate)
+
 # set working_dir variable
 working_dir <- "~/Documents/courses/repdata/RepData_PeerAssessment1"
 
@@ -17,6 +26,8 @@ setwd(working_dir)
 
 ### Load the data
 
+Read data file *activity.csv* into data frame activity.
+
 
 ```r
 # read the data
@@ -24,9 +35,7 @@ activity <- read.csv("activity.csv")
 ```
 
 
-### Preprocess the data
-
-In order to produce histogram and calculate the mean and median, we first compute the sum of steps for each day. 
+## What is mean total number of steps taken per day?
 
 
 ```r
@@ -37,26 +46,31 @@ medianSteps <- as.integer(median(dailySteps$steps))
 
 # get interval steps by day
 dailyAvg <- aggregate(steps ~ interval, activity, mean)
+
+# calculate max interval across all days
+max_interval <- dailyAvg[which(dailyAvg$steps == max(dailyAvg$steps)),]$interval
 ```
 
-## What is mean total number of steps taken per day?
+Below is the historgam of the total number of step taken. The **mean** and **median** of total number of steps taken per day are 10766 and 10765 respectively.
 
-* The historgam of the total number of step taken.
 
 
 ```r
-hist(dailySteps$steps, breaks=seq(0,25000,1000), col="BLUE")
+hist(dailySteps$steps, 
+     breaks=seq(0,25000,1000), 
+     col="BLUE",
+     main="Histogram of Daily Steps",
+     xlab="Daily Steps")
 ```
 
 ![](PA1_template_files/figure-html/unnamed-chunk-4-1.png) 
 
-* The **mean** and **median** of total number of steps taken per day.
-    * Mean: 10766
-    * Median: 10765
   
 ## What is the average daily activity pattern?
 
-* Below is a time series plot of the 5-minute intervals and the average number of steps taken, averaged across all days.
+Below is a time series plot of the 5-minute intervals and the average number of steps taken, averaged across all days. 
+
+The interval which contains the maximum average, across all days in the dataset, is 835
 
 
 
@@ -74,15 +88,9 @@ axis(side=1, at = seq(0,2500,250))
 ![](PA1_template_files/figure-html/unnamed-chunk-5-1.png) 
 
 
-
-```r
-max_interval <- dailyAvg[which(dailyAvg$steps == max(dailyAvg$steps)),]$interval
-```
-
-* The interval which contains the maximum average, across all days in the dataset, is $835$
-
-
 ## Imputing missing values
+
+To impute missing values the average steps per interval were used. For example, if there is a missing value for interval 10 on any day and the average for interval 10 is 2.4, then the missing values for interval 10 are set to 2.4.
 
 
 ```r
@@ -105,20 +113,69 @@ medianSteps <- as.integer(median(dailySteps$steps))
 dailyAvg <- aggregate(steps ~ interval, activity, mean)
 ```
 
-* The historgam of the total number of step taken.
+Total number of missing values is 2304
+ 
+Below is the historgam of the total number of step taken using the imputed data. The **mean** and **median** of total number of steps taken per day are 10766 and 10766 respectively.
+
 
 
 ```r
-hist(dailySteps$steps, breaks=seq(0,25000,1000), col="BLUE")
+hist(dailySteps$steps, 
+     breaks=seq(0,25000,1000), 
+     col="BLUE",
+     main="Histogram of Daily Steps",
+     xlab="Daily Steps")
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-8-1.png) 
+![](PA1_template_files/figure-html/unnamed-chunk-7-1.png) 
 
-* Total number of missing values is $2304$
-
-* The **mean** and **median** of total number of steps taken per day.
-    * Mean: $10766$
-    * Median: $10766$
 
 ## Are there differences in activity patterns between weekdays and weekends?
 
+Using the imputed activity dataframe, we add colum *dayofweek* so we can break out the data by weekend and weekday. Similar calculations as those for the first time series plot are done on the weekend and weekday data and plotted together. 
+
+The graphs below indicate that there is more activity on the weekend between the intervals of 1000 to 2100 than during the weekdays.
+
+
+```r
+# add new column dayofweek; populate with the day name (Sun - Sat)
+activity$dayofweek = wday(ymd(activity$date),label=TRUE)
+
+weekday <- activity %>%
+            filter(dayofweek %in% c("Mon","Tues","Wed","Thurs","Fri"))
+weekday <- aggregate(steps ~ interval, weekday, mean)
+
+weekend <- activity %>%
+            filter(dayofweek %in% c("Sun","Sat"))
+weekend <- aggregate(steps ~ interval, weekend, mean)
+
+
+par(mfrow=c(2,1))
+plot(weekend$interval,
+     weekend$steps,
+     ylim = c(0,300),
+     type = "l",
+     xlab = "",
+     ylab = "Steps",
+     main = "Weekend",
+     axes = FALSE,
+     panel.first = grid()
+)
+axis(side=1, at = seq(0,2500,250))
+axis(side=2, at = seq(0,300,100))
+
+plot(weekday$interval,
+     weekday$steps,
+     ylim = c(0,300),
+     type = "l",
+     xlab = "5 Minute Intervals",
+     ylab = "Steps",
+     main = "Weekday",
+     axes = FALSE,
+     panel.first = grid()
+)
+axis(side=1, at = seq(0,2500,250))
+axis(side=2, at = seq(0,300,100))
+```
+
+![](PA1_template_files/figure-html/unnamed-chunk-8-1.png) 
